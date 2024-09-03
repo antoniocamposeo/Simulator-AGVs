@@ -26,33 +26,36 @@ class AGV:
 
     def check_state(self):
         self.update_machine_state()
-        if self.machine_state is not None:
-            if self.machine_state[self.task] == 1:
-                self.state[self.task] = 1
-                self.state['Move'] = 1
-            else:
-                self.state[self.task] = 0
-                self.state['Move'] = 0
-                self.move_task_time[self.task] = {'start': 0, 'end': 0}
-                # self.machine = None
+        # if self.machine_state is not None:
+        #     if self.machine_state[self.task] == 1:
+        #         self.state[self.task] = 1
+        #
+        #     if self.machine_state[self.task] == 0:
+        #         self.state[self.task] = 0
+        #         self.move_task_time[self.task] = {'start': 0, 'end': 0}
 
     def check_task(self):
         if self.machine is not None:
             start_task_time = self.time_task
-            finish_task_time = 0
+            finish_task_time = None
             if self.task is not None and self.task == 'Load':
                 finish_task_time = start_task_time + self.move_duration + self.machine.load_time
-
+                self.move_task_time[self.task]['start'] = start_task_time
+                self.move_task_time[self.task]['end'] = start_task_time + self.move_duration
             if self.task is not None and self.task == 'Unload':
-                finish_task_time = start_task_time + self.move_duration + self.machine.load_time
+                finish_task_time = start_task_time + self.move_duration + self.machine.unload_time
+                self.move_task_time[self.task]['start'] = start_task_time
+                self.move_task_time[self.task]['end'] = start_task_time + self.move_duration
 
-            self.move_task_time[self.task]['start'] = self.time_task
-            self.move_task_time[self.task]['end'] = self.time_task + self.move_duration
-
-            if start_task_time <= self.actual_time < finish_task_time:
+            if start_task_time <= self.actual_time < finish_task_time and finish_task_time is not None:
                 self.state['Wait'] = 0
+                self.state['Move'] = 1
+                self.state[self.task] = 1
             else:
                 self.state['Wait'] = 1
+                self.state['Move'] = 0
+                self.state[self.task] = 0
+                # self.move_task_time[self.task] = {'start': 0, 'end': 0}
                 self.set_position(self.machine.position)
                 self.machine = None
 
@@ -88,5 +91,6 @@ class AGV:
 
     def main(self, time):
         self.update_time(time)
-        self.check_state()
         self.check_task()
+        self.check_state()
+

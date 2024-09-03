@@ -1,75 +1,51 @@
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 import Machine
 import AGV
+import test
+import manage_data
+
+from plotly.subplots import make_subplots
 from Machine import Machine
 from AGV import AGV
-
-N = 2
-M = 4
-tot_time = 100
-AGV_l = [AGV(0, 2),
-         AGV(1, 2),
-         AGV(2, 2),
-
-         ]
-
-Machine_l = [Machine(0, 0, 1, 2, 2, 2, (2, 2)),
-             Machine(1, 1, 2, 2, 2, 2, (1, 1)),
-             Machine(2, 2, 2, 2, 2, 2, (2, 1)),
-             Machine(3, 3, 1, 2, 2, 2, (1, 2)), ]
-
-problem_state = {'AGVs':
-    {
-        0: {'State': None, 'Task': None, 'Machine': None, 'Position': None},
-        1: {'State': None, 'Task': None, 'Machine': None, 'Position': None},
-    },
-
-    'Machines':
-        {0: {'State': None, 'AGV_load': None, 'AGV_unload': None},
-         1: {'State': None, 'AGV_load': None, 'AGV_unload': None},
-         }}
-
-for i in range(N):
-    problem_state['AGVs'][i]['State'] = AGV_l[i].get_state()
-    problem_state['AGVs'][i]['Task'] = AGV_l[i].get_task()
-    problem_state['AGVs'][i]['Machine'] = AGV_l[i].get_machine()
-    problem_state['AGVs'][i]['Position'] = AGV_l[i].get_position()
+from copy import deepcopy
 
 
-# ogni macchina e agv ha variabili che indicano l'inizio e la fine del task. ad ogni instate vanno controllate e
-# aggiornate. inoltre va controllato in che stato stanno.
+# TODO : Insert VERBOSE, 1-2-3, based on what we want to print
+# TODO : Comment functions,and classes
 
-# devo creare una funzione che ad ogni istante di tempo mi faccia un resoconto del problema.
-# dopo il recap,mi deve resituire i macchinari liberi per il carico e lo scarico, gli agv liberi
-# e deve assegnare i task di carico e scarico in base alla minor tempo di spostamento.
+# TODO: Quando tutti i macchinari hanno completato le lavorazioni, gli agv possono tornare alla base di partenza
+#  ... la simulazione termina quando tutti gli agv sono tornati alla base. I realta potremmo aggiungere il tempo
+#  ... di ritorno al termine del completamento di tutte le macchine. L'importante è portare a completamento i
+#  ... macchinari fare test con piu agv
+
 
 # class that manage the task every second
 class Optimizer:
-    def __init__(self, N, M, tot_time):
+    def __init__(self, N, M, tot_time, speed):
+        self.state_position = []
         self.N = N  # numero di agv
         self.M = M  # numero di macchine
-        self.AGV_l = AGV_l  # liste o array di agv
-        self.Machine_l = Machine_l  # liste o array di agv
+        self.AGV_l = [AGV(i, speed) for i in range(self.N)]
+        self.Machine_l = [Machine(0, 0, 10, 100, 10, 9, (10, 10)),
+                          Machine(1, 1, 10, 90, 11, 8, (20, 10)),
+                          Machine(2, 2, 10, 80, 12, 7, (10, 20)),
+                          Machine(3, 3, 10, 70, 13, 6, (20, 20)),
+                          Machine(4, 4, 10, 60, 14, 5, (30, 20)),
+                          Machine(5, 5, 10, 50, 15, 4, (20, 30)),
+                          ]
         self.t = 0
         self.simulation_time = tot_time
-        self.state = {'AGVs':
-                          {0: {'State': None, 'Task': None, 'Machine': None, 'Position': None},
-                           1: {'State': None, 'Task': None, 'Machine': None, 'Position': None},
-                           2: {'State': None, 'Task': None, 'Machine': None, 'Position': None},
-                           },
-                      'Machines':
-                          {0: {'State': None, 'AGV_load': None, 'AGV_unload': None},
-                           1: {'State': None, 'AGV_load': None, 'AGV_unload': None},
-                           2: {'State': None, 'AGV_load': None, 'AGV_unload': None},
-                           3: {'State': None, 'AGV_load': None, 'AGV_unload': None},
-                           }}
+        self.state = {
+            'AGVs': {i: {'State': None, 'Task': None, 'Machine': None, 'Position': None} for i in range(self.N)},
+            'Machines': {i: {'State': None, 'AGV_load': None, 'AGV_unload': None} for i in range(self.M)}
+        }
         self.agv_available = []
         self.machine_load_available = []
         self.machine_unload_available = []
-        self.sequence = {0: 0,  # 0 (machine): 1 load 2 unload
-                         1: 0,  # 1 (machine): 1 load 2 unload
-                         2: 0,
-                         3: 0}
+        self.sequence = {k: 0 for k in range(self.M)}
+        self.states = []
 
     def update_state(self):
         for i in range(self.N):
@@ -103,18 +79,19 @@ class Optimizer:
         self.machine_unload_available = []
         for i in range(self.M):
             if machine_temp[i]['State']['Complete'] == 0 and machine_temp[i]['State']['Load'] == 0 and machine_temp[i][
-                'AGV_load'] is None:
+                'AGV_load'] is None and machine_temp[i]['State']['Work'] == 0:
                 self.machine_load_available.append(self.Machine_l[i])
             if machine_temp[i]['State']['Work'] == 0 and machine_temp[i]['State']['Unload'] == 0 and machine_temp[i][
                 'AGV_unload'] is None:
                 self.machine_unload_available.append(self.Machine_l[i])
-        str_load = ''
-        for m in self.machine_load_available:
-            str_load = ' ' + str_load + '[' + str(m.id) + ']' + ' '
-        str_unload = ''
-        for m in self.machine_unload_available:
-            str_unload = ' ' + str_unload + '[' + str(m.id) + ']' + ' '
-        print('Load:' + str_load + '\n\r' + 'Unload:' + str_unload + '\n')
+
+        # str_load = ''
+        # for m in self.machine_load_available:
+        #     str_load = ' ' + str_load + '[' + str(m.id) + ']' + ' '
+        # str_unload = ''
+        # for m in self.machine_unload_available:
+        #     str_unload = ' ' + str_unload + '[' + str(m.id) + ']' + ' '
+        # print('Load:' + str_load + '\n\r' + 'Unload:' + str_unload + '\n')
 
     def assign_machine_agv(self):
         """
@@ -125,6 +102,7 @@ class Optimizer:
         machine_position_load = {m.id: m.get_position() for m in self.machine_load_available}
         machine_position_unload = {m.id: m.get_position() for m in self.machine_unload_available}
         agv_position = {a.id: [a.get_position(), a.speed] for a in self.agv_available}
+        # print(agv_position)
 
         assign_task = {}
         if len(agv_position) >= 1:
@@ -140,7 +118,7 @@ class Optimizer:
                                 break
                             elif self.sequence[index_min_time] >= 1:
                                 machine_position_load.pop(index_min_time)
-                    if len(machine_position_load) <= 0 and len(machine_position_unload)>0:
+                    elif len(machine_position_load) <= 0 and len(machine_position_unload) > 0:
                         index_min_time = self.find_best_machine_to_assign(agv_position[agv], machine_position_unload)
                         if index_min_time != -1:
                             if self.sequence[index_min_time] == 1:
@@ -150,8 +128,8 @@ class Optimizer:
                                 break
                             elif self.sequence[index_min_time] != 1:
                                 machine_position_unload.pop(index_min_time)
-                    if len(machine_position_unload) == 0:
-                        print('No machine available')
+                    elif len(machine_position_unload) == 0:
+                        # print('No machine available')
                         break
 
         return assign_task
@@ -161,7 +139,27 @@ class Optimizer:
             time = {}
             for m in machine_position:
                 time[m] = self.distance_to_time(agv[0], machine_position[m], agv[1])
+
+            # Trova il valore minimo nel dizionario
+            valore_minimo = min(time.values())
+
+            # Trova gli indici (le chiavi) che hanno quel valore minimo
+            indici_minimo = [chiave for chiave, valore in time.items() if valore == valore_minimo]
+            # print(indici_minimo + 'indice scelto' +str(min(time, key=time.get)))
+            min_index = 0
+            if len(indici_minimo) == 3:
+                print(str(indici_minimo) + 'indice scelto' + str(indici_minimo[0]))
+                min_index = indici_minimo[1]
+            elif len(indici_minimo) == 2:
+                min_index = indici_minimo[1]
+                print(str(indici_minimo) + 'indice scelto' + str(indici_minimo[0]))
+            else:
+                min_index = indici_minimo[0]
+                print(str(indici_minimo) + 'indice scelto' + str(indici_minimo[0]))
+
             return min(time, key=time.get)
+            # return min_index
+
         else:
             return -1
 
@@ -194,30 +192,142 @@ class Optimizer:
                     self.Machine_l[tasks[a][0]].set_unload(self.AGV_l[a])
 
     def update_all(self):
-        for k in range(N):
+        for k in range(self.N):
             self.AGV_l[k].main(self.t)
-        for j in range(M):
+        for j in range(self.M):
             self.Machine_l[j].main(self.t)
 
+    def print_position_agvs(self):
+        string = 'Position AGVs:\n'
+        for i in range(self.N):
+            string += 'AGV' + str(i) + ':' + str(self.state['AGVs'][i]['Position']) + '\r\n'
+        print(string)
+
+    def check_status_sim(self):
+        machine_complete = 0
+        for i in range(self.M):
+            if self.state['Machines'][i]['State']['Complete'] == 1:
+                machine_complete += 1
+        if machine_complete >= self.M:
+            return 1
+
+    def set_status(self):
+        temp = []
+        for i in range(self.N):
+            temp.append(self.state['AGVs'][i]['Position'])
+        self.state_position.append(temp)
+        self.states.append(deepcopy(self.state))
+
+    def get_status(self):
+        return self.states
+
     def main(self):
+
+        self.update_all()
         self.update_state()
+        self.set_status()
         for t in range(1, self.simulation_time):
+            status = self.check_status_sim()
+
             self.t = t
-            print(t)
             self.agvs_available()
             self.machines_available()
             task = self.assign_machine_agv()
-            print(task)
-            print(self.sequence)
             self.update_task(task)
-            self.update_state()
-            print(self.state)
             self.update_all()
+            self.update_state()
+            self.set_status()
+            # self.print_position_agvs()
+            if status is not None and status >= 1:
+                # print('Simulation Terminated, Time:' + str(self.t))
+                # self.print_position_agvs()
+                break
+
+            # print(t)
+            # print(task)
+            # print(self.sequence)
+            # print(self.state)
 
 
-opt = Optimizer(N=3, M=4, tot_time=40)
-# TODO: Quando tutti i macchinari hanno completato le lavorazioni, gli agv possono tornare alla base di partenza ...
-# ... la simulazione termina quando tutti gli agv sono tornati alla base. I realta potremmo aggiungere il tempo ...
-# ... di ritorno al termine del completamento di tutte le macchine. L'importante è portare a completamento i macchinari.
-# fare test con piu agv
+opt = Optimizer(N=6, M=6, tot_time=2000, speed=4)
 opt.main()
+print('N_AGVs:' + str(opt.N) + '\t Simulation Time:' + str(opt.t))
+
+
+def test_speed(speed_arr,plotting:int):
+    speed_f_sim = []
+    for s in speed_arr:
+        f_sim = np.array([])
+        for i in range(1, 20):
+            opt = Optimizer(N=i, M=6, tot_time=10000, speed=s)
+            opt.main()
+            print('N_AGVs:' + str(i) + '\t Simulation Time:' + str(opt.t))
+            f_sim = np.append(f_sim, opt.t)
+
+        speed_f_sim.append(f_sim)
+    match plotting:
+        case 0:
+            test.plotting(speed_f_sim, speed_arr)
+        case 1:
+            try:
+                test.plotting1(speed_f_sim,speed_arr)
+            except:
+                raise 'Use only 5 speed'
+        case 2:
+            try:
+                test.plotting2(speed_f_sim)
+            except:
+                raise 'Use only 1 speed'
+
+
+
+def Gantt(OPT: Optimizer,plot_agv:int,plot_machine:int):
+    temp = OPT.get_status()
+    # Dividere per ogni AGV e Macchina quello che fanno in un arco temporale
+    AGVs = [[] for i in range(OPT.N)]
+    Machines = [[] for i in range(OPT.M)]
+    for i in range(len(temp)):
+        for n in range(OPT.N):
+            AGVs[n].append(temp[i]['AGVs'][n])
+        for m in range(OPT.M):
+            Machines[m].append(temp[i]['Machines'][m])
+
+    figure_agv = manage_data.fig_agv(AGVs, plot_agv)
+    figure_machine = manage_data.fig_machine(Machines, plot_machine)
+
+    if plot_agv==1 and plot_machine==1:
+        # Creiamo una figura con due sottotrame
+        fig_tot = make_subplots(rows=2, cols=1, subplot_titles=['Machine Operations', 'AGV Operations'])
+
+        # Aggiungiamo il primo grafico Gantt alla prima sottotrama
+        for trace in figure_machine.data:
+            fig_tot.add_trace(trace, row=1, col=1)
+
+        # Aggiungiamo il secondo grafico Gantt alla seconda sottotrama
+        for trace in figure_agv.data:
+            fig_tot.add_trace(trace, row=2, col=1)
+
+        # Aggiorniamo il layout per migliorare la visualizzazione
+        fig_tot.update_layout(
+            title_text='Gantt Charts ',
+            height=1000,  # Altezza della figura complessiva
+            showlegend=True
+        )
+
+        # Mostriamo la figura
+        fig_tot.show()
+
+
+if __name__ == '__main__':
+    # Single Test
+    opt = Optimizer(N=2, M=4, tot_time=5000, speed=2)
+    opt.main()
+    print('N_AGVs:' + str(opt.N) + '\t Simulation Time:' + str(opt.t))
+
+    # Multi Test - Speed
+    # Create a numpy vector with speed
+    # speed_arr = np.arange(0.2, 5) / 2
+    # test_speed(speed_arr=speed_arr)
+
+    # Gant With Single Simulation
+    Gantt(opt,1,1)
