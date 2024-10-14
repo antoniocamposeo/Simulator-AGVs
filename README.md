@@ -15,7 +15,8 @@ Questo progetto si concentra sullo sviluppo di un sistema automatizzato basato s
 - **AGV**: Robot mobili responsabili del trasporto dei materiali.
 - **Macchine**: Entità che eseguono operazioni di carico, lavorazione e scarico.
 - **Scheduler**: Componente che gestisce l'assegnazione dei task ad ogni intervallo di tempo, ottimizzando i movimenti degli AGV.
-![prova](https://github.com/user-attachments/assets/94871122-40d2-48f2-bcd8-c7069fc7a503)
+![prova](https://github.com/user-attachments/assets/54627e60-b4f3-46c6-aa27-1ad9bcafb2a6)
+
 
 ## Funzionamento
 
