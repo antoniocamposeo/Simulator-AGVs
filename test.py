@@ -87,7 +87,7 @@ def plotting(arr, speed_arr):
         plt.plot(x, y, color=colors[i], linewidth=3, label=labels[i])
 
     # Personalizza l'aspetto del plot
-    plt.title("Comparison of Makespan - Variation of Speed - N°Machine = 6 ", color="white", fontsize=18)
+    plt.title("Comparison of Makespan - Variation of Speed - N°Machine = 3 ", color="white", fontsize=18)
     plt.xlabel("N°AGVs", color="white", fontsize=12)
     plt.ylabel("Makespan", color="white", fontsize=12)
     plt.grid(True, linestyle='--', color='gray')

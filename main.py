@@ -12,13 +12,13 @@ def test_speed(speed_arr, plotting: int):
     speed_f_sim = []
     for s in speed_arr:
         f_sim = np.array([])
-        for i in range(1, 20):
-            OPT = Optimizer(N=i, M=6, tot_time=10000, speed=s)
+        for i in range(1, 5):
+            OPT = Optimizer(N=i, M=3, tot_time=200000, speed=s)
             OPT.main()
             print('N_AGVs:' + str(i) + '\t Simulation Time:' + str(OPT.t))
             f_sim = np.append(f_sim, OPT.t)
-
         speed_f_sim.append(f_sim)
+
     match plotting:
         case 0:
             test.plotting(speed_f_sim, speed_arr)
@@ -48,7 +48,7 @@ def Gantt(OPT: Optimizer, plot_agv: int, plot_machine: int):
     figure_agv = manage_data.fig_agv(AGVs, plot_agv)
     figure_machine = manage_data.fig_machine(Machines, plot_machine)
 
-    if plot_agv == 1 and plot_machine == 1:
+    if plot_agv == 0 and plot_machine == 0:
         # Creiamo una figura con due sottotrame
         fig_tot = make_subplots(rows=2, cols=1, subplot_titles=['Machine Operations', 'AGV Operations'])
 
@@ -73,14 +73,15 @@ def Gantt(OPT: Optimizer, plot_agv: int, plot_machine: int):
 
 if __name__ == '__main__':
     # Single Test
-    opt = Optimizer(N=2, M=4, tot_time=5000, speed=2)
-    opt.main()
-    print('N_AGVs:' + str(opt.N) + '\t Simulation Time:' + str(opt.t))
+    # opt = Optimizer(N=2, M=3, tot_time=10000, speed=2)
+    # opt.main()
+    # print('N_AGVs:' + str(opt.N) + '\t Simulation Time:' + str(opt.t))
 
     # Multi Test - Speed
     # Create a numpy vector with speed
-    # speed_arr = np.arange(0.2, 5) / 2
-    # test_speed(speed_arr=speed_arr)
+    speed_arr = np.array([1, 1.2, 1.4, 1.6, 1.8, 2])
+    test_speed(speed_arr=speed_arr, plotting=0)
 
     # Gant With Single Simulation
-    Gantt(opt, 1, 1)
+    # Gantt(opt, 1, 1)
+

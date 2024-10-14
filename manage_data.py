@@ -33,7 +33,7 @@ def fig_machine(machines, plot: int):
 
     # Funzione per generare una data di partenza
     def generate_date(base_time, task_index):
-        return base_time + timedelta(minutes=task_index)
+        return base_time + timedelta(seconds=task_index)
 
     # Base time per i task
     base_time = datetime(2024, 9, 1, 10, 0, 0)  # Inizio alle 08:00

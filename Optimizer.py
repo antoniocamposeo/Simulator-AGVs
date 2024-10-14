@@ -12,6 +12,10 @@ from AGV import AGV
 from copy import deepcopy
 
 
+# TODO : IMPORTANTE - RINCONTROLLARE ASSEGNAZIONE UNLOAD TASK , DEVONO INZIARE QUANDO LA LAVORAZIONE FINISCE.
+#  Quindi bisogna torare un modo che assegni agli agv il tasj di scarico in base alla differneza tra illoro tempo
+#  di arrivo alla macchina e il tempo di fine della macchina
+# TODO: Aggiungere feature alle sequence, in quanto lo scarico puo iniziare solo se la macchina ha terminato il carico
 # TODO : Insert VERBOSE, 1-2-3, based on what we want to print
 # TODO : Comment functions,and classes
 
@@ -27,14 +31,18 @@ class Optimizer:
         self.state_position = []
         self.N = N  # numero di agv
         self.M = M  # numero di macchine
-        self.AGV_l = [AGV(i, speed) for i in range(self.N)]
-        self.Machine_l = [Machine(0, 0, 10, 100, 10, 9, (10, 10)),
-                          Machine(1, 1, 10, 90, 11, 8, (20, 10)),
-                          Machine(2, 2, 10, 80, 12, 7, (10, 20)),
-                          Machine(3, 3, 10, 70, 13, 6, (20, 20)),
-                          Machine(4, 4, 10, 60, 14, 5, (30, 20)),
-                          Machine(5, 5, 10, 50, 15, 4, (20, 30)),
+        self.tot_time = tot_time
+        self.speed = speed
+        self.AGV_l = [AGV(i, self.speed) for i in range(self.N)]
+
+        self.Machine_l = [Machine(0, 0, 30, 100, 20, 20, (0, 5)),
+                          Machine(1, 1, 30, 100, 20, 20, (5, 5)),
+                          Machine(2, 2, 30, 100, 20,20, (10, 0)),
+                          Machine(3, 3, 30, 100, 20, 20, (20, 20)),
+                          Machine(4, 4, 30, 100, 20, 20, (30, 20)),
+                          Machine(5, 5, 30, 100, 20, 20, (20, 30)),
                           ]
+        self.stock = {'position': (10, 10)}
         self.t = 0
         self.simulation_time = tot_time
         self.state = {
@@ -78,12 +86,13 @@ class Optimizer:
         self.machine_load_available = []
         self.machine_unload_available = []
         for i in range(self.M):
-            if machine_temp[i]['State']['Complete'] == 0 and machine_temp[i]['State']['Load'] == 0 and machine_temp[i][
-                'AGV_load'] is None and machine_temp[i]['State']['Work'] == 0:
+            if machine_temp[i]['State']['Complete'] == 0 and machine_temp[i]['State']['Load'] == 0 and machine_temp[i]['State']['Work'] == 0:
                 self.machine_load_available.append(self.Machine_l[i])
-            if machine_temp[i]['State']['Work'] == 0 and machine_temp[i]['State']['Unload'] == 0 and machine_temp[i][
-                'AGV_unload'] is None:
+            if machine_temp[i]['State']['Work'] == 1 or machine_temp[i]['State']['Unload'] == 0:
                 self.machine_unload_available.append(self.Machine_l[i])
+            if machine_temp[i]['State']['Work'] == 0 and machine_temp[i]['State']['Complete'] == 1 :
+                self.machine_unload_available.append(self.Machine_l[i])
+                # print(self.sequence)
 
         # str_load = ''
         # for m in self.machine_load_available:
@@ -103,73 +112,101 @@ class Optimizer:
         machine_position_unload = {m.id: m.get_position() for m in self.machine_unload_available}
         agv_position = {a.id: [a.get_position(), a.speed] for a in self.agv_available}
         # print(agv_position)
-
+        index_min_time = 0
         assign_task = {}
         if len(agv_position) >= 1:
             for agv in agv_position:
                 while True:
+                    # print('T')
                     if len(machine_position_load) > 0:
-                        index_min_time = self.find_best_machine_to_assign(agv_position[agv], machine_position_load)
+                        task = 'Load'
+                        index_min_time, index_array = self.find_best_machine_to_assign(agv_position[agv],
+                                                                                       machine_position_load, task)
                         if index_min_time != -1:
                             if self.sequence[index_min_time] < 1:
                                 assign_task[agv] = [index_min_time, 'Load']
                                 self.sequence[index_min_time] += 1
+                                # self.check_sequence()
                                 machine_position_load.pop(index_min_time)
+                                # if index_array is not None:
+                                    # print('LOAD TASK INDEXS :' + str(index_array))
+                                    # print('INDEX:' + str(index_min_time))
                                 break
                             elif self.sequence[index_min_time] >= 1:
                                 machine_position_load.pop(index_min_time)
                     elif len(machine_position_load) <= 0 and len(machine_position_unload) > 0:
-                        index_min_time = self.find_best_machine_to_assign(agv_position[agv], machine_position_unload)
+                        task = 'Unload'
+                        index_min_time, index_array = self.find_best_machine_to_assign(agv_position[agv],
+                                                                                       machine_position_unload,
+                                                                                       task)
+
                         if index_min_time != -1:
                             if self.sequence[index_min_time] == 1:
                                 assign_task[agv] = [index_min_time, 'Unload']
                                 self.sequence[index_min_time] -= 1
                                 machine_position_unload.pop(index_min_time)
+                                # if index_array is not None:
+                                    # print('UNLOAD TASK INDEXS :' + str(index_array))
+                                    # print('INDEX:' + str(index_min_time))
                                 break
                             elif self.sequence[index_min_time] != 1:
                                 machine_position_unload.pop(index_min_time)
                     elif len(machine_position_unload) == 0:
                         # print('No machine available')
                         break
+                    if len(machine_position_unload) > 0 and index_min_time == -1:
+                        break
 
         return assign_task
 
-    def find_best_machine_to_assign(self, agv, machine_position):
+    def check_sequence(self):
+        for key, value in self.sequence.items():
+            # if self.Machine_l[key].finish_load_time is not None:
+            print('------------------')
+            print(f'Time:{self.t} - Sequence value:{value}')
+            print(f'Machine:{key} - FinishLoad:{self.Machine_l[key].finish_load_time}')
+            # if value == 1 and self.Machine_l[key].finish_load_time >= self.t:
+            #     print(2)
+            # self.sequence[key] = 2
+
+    def find_best_machine_to_assign(self, agv, machine_position, task):
         if len(machine_position) >= 1:
             time = {}
-            for m in machine_position:
-                time[m] = self.distance_to_time(agv[0], machine_position[m], agv[1])
+            if task == 'Load':
+                for m in machine_position:
+                    time[m] = (self.distance_to_time(agv[0], self.stock['position']) + self.Machine_l[m].load_time +
+                               self.distance_to_time(self.stock['position'], machine_position[m]))
+            elif task == 'Unload':
+                for m in machine_position:
+                    if self.Machine_l[m].work_time['end'] is not None:
+                        if ((self.t + self.distance_to_time(agv[0], machine_position[m]) + self.Machine_l[
+                            m].unload_time) >
+                                (self.Machine_l[m].work_time['end'])):
+                            time[m] = (self.distance_to_time(agv[0], machine_position[m]) + self.Machine_l[
+                                m].unload_time + self.distance_to_time(machine_position[m], self.stock['position']))
 
-            # Trova il valore minimo nel dizionario
-            valore_minimo = min(time.values())
-
-            # Trova gli indici (le chiavi) che hanno quel valore minimo
-            indici_minimo = [chiave for chiave, valore in time.items() if valore == valore_minimo]
-            # print(indici_minimo + 'indice scelto' +str(min(time, key=time.get)))
-            min_index = 0
-            if len(indici_minimo) == 3:
-                print(str(indici_minimo) + 'indice scelto' + str(indici_minimo[0]))
-                min_index = indici_minimo[1]
-            elif len(indici_minimo) == 2:
-                min_index = indici_minimo[1]
-                print(str(indici_minimo) + 'indice scelto' + str(indici_minimo[0]))
+                # print(time)
+                # valore_minimo = min(time.values())
+                # indexs_min = [chiave for chiave, valore in time.items() if valore == valore_minimo]
+            # return min(time, key=time.get),indexs_min
+            if len(time) == 0:
+                return -1, None
             else:
-                min_index = indici_minimo[0]
-                print(str(indici_minimo) + 'indice scelto' + str(indici_minimo[0]))
+                valore_minimo = min(time.values())
+                indexs_min = [chiave for chiave, valore in time.items() if valore == valore_minimo]
 
-            return min(time, key=time.get)
-            # return min_index
+                return min(time, key=time.get), indexs_min
 
         else:
-            return -1
+            return -1, None
 
-    @staticmethod
-    def distance_to_time(p1: tuple, p2: tuple, speed):
+    def distance_to_time(self, p1: tuple, p2: tuple):
         distance = np.abs(p1[0] - p2[0]) + np.abs(p1[1] - p2[1])  # mannathan distance
+        # distance = np.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
         if distance <= 0:
             time = 0
         else:
-            time = round(distance / speed)
+            time = round(distance / self.speed)
         return time
 
     def update_task(self, tasks: dict):
@@ -180,15 +217,23 @@ class Optimizer:
                 self.AGV_l[a].set_machine(self.Machine_l[tasks[a][0]])  # Assign Machine to AGV
                 self.AGV_l[a].set_task(tasks[a][1])
 
-                self.AGV_l[a].set_move_duration(self.distance_to_time(self.AGV_l[a].get_position(),
-                                                                      self.AGV_l[a].get_machine().get_position(),
-                                                                      self.AGV_l[a].speed))
-                self.AGV_l[a].set_time_task(self.t)
+                # self.AGV_l[a].set_move_duration(self.distance_to_time(self.AGV_l[a].get_position(),
+                #                                                       self.AGV_l[a].get_machine().get_position()))
+                # self.AGV_l[a].set_time_task(self.t)
 
                 if tasks[a][1] == 'Load':
+                    self.AGV_l[a].set_move_duration((self.distance_to_time(self.AGV_l[a].get_position(),
+                                                                           self.stock['position']) +
+                                                     self.distance_to_time(self.stock['position'],
+                                                                           self.AGV_l[a].get_machine().get_position())))
+                    self.AGV_l[a].set_time_task(self.t)
                     self.Machine_l[tasks[a][0]].set_load(self.AGV_l[a])
-
                 elif tasks[a][1] == 'Unload':
+                    self.AGV_l[a].set_move_duration(self.distance_to_time(self.AGV_l[a].get_position(),
+                                                                          self.AGV_l[a].get_machine().get_position()) +
+                                                    self.distance_to_time(self.AGV_l[a].get_machine().get_position(),
+                                                                          self.stock['position']))
+                    self.AGV_l[a].set_time_task(self.t)
                     self.Machine_l[tasks[a][0]].set_unload(self.AGV_l[a])
 
     def update_all(self):
@@ -222,7 +267,6 @@ class Optimizer:
         return self.states
 
     def main(self):
-
         self.update_all()
         self.update_state()
         self.set_status()
@@ -241,10 +285,10 @@ class Optimizer:
             if status is not None and status >= 1:
                 # print('Simulation Terminated, Time:' + str(self.t))
                 # self.print_position_agvs()
+                print(self.state)
                 break
 
             # print(t)
             # print(task)
             # print(self.sequence)
-            # print(self.state)
 

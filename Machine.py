@@ -62,8 +62,9 @@ class Machine:
 
     def check_unload(self):
         if self.AGV_unload is not None:
+
             self.start_unload_time = self.AGV_unload.move_task_time['Unload']['start']
-            self.finish_unload_time = self.unload_time + self.AGV_unload.move_task_time['Unload']['end']
+            self.finish_unload_time = self.AGV_unload.move_task_time['Unload']['end'] + self.unload_time
             if self.start_unload_time <= self.actual_time < self.finish_unload_time:
                 self.state['Unload'] = 1
             else:
@@ -91,7 +92,7 @@ class Machine:
             if self.n_works <= 0:
                 self.state['Complete'] = 1
                 self.AGV_load = None
-                self.AGV_unload = None
+                # self.AGV_unload = None
         # print(self.work_time)
 
     def set_load(self, agv_load):
@@ -111,7 +112,8 @@ class Machine:
 
     def main(self, time):
         self.update_time(time)
-        self.check_load()
-        self.check_unload()
         self.calculate_work_time()
         self.check_state()
+        self.check_load()
+        self.check_unload()
+
