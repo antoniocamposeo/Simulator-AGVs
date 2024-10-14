@@ -25,7 +25,12 @@ Questo progetto si concentra sullo sviluppo di un sistema automatizzato basato s
 2. **Assegnazione dei Task**: Lo Scheduler crea una lista di AGV e macchine disponibili e assegna i task tenendo conto della distanza minima e della sequenza di operazioni (carico, lavorazione, scarico).
 
 3. **Ottimizzazione**: L'algoritmo utilizza un'euristica per migliorare l'assegnazione dei task e ridurre i tempi di inattività.
+![prova](https://github.com/user-attachments/assets/b8719c0f-7193-4b93-98f9-8b5cf7840b30)
 
+# Analisi della Velocità Variabile degli AGV
+
+È stata effettuata un'analisi riguardo alla **velocità variabile degli AGV**, che può variare da **1 a 2 m/s**. Sono state studiate le soluzioni al variare della velocità e del numero di AGV, fino a un massimo di **5 unità**. Questa analisi ha permesso di valutare l'impatto della velocità e della quantità di AGV sulla performance complessiva del sistema, identificando i parametri ottimali per migliorare l'efficienza operativa.
+![test](https://github.com/user-attachments/assets/6edeec17-b86b-4190-9263-9b062630d51e)
 ## Installazione
 
 1. Clona questo repository:
