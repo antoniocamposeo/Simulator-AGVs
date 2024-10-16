@@ -57,9 +57,6 @@ Minimizzare il **makespan** \( t_{makespan} \):
    \sum_{t=0}^{t_{makespan}} x_{a,m}(t) = W_m \quad \forall m
    \]
 
-## Descrizione del Progetto
-
-Questo progetto si concentra sullo sviluppo di un sistema automatizzato basato su robot mobili (AGV) in grado di trasportare materiali tra le diverse macchine nel processo produttivo di sagomatura del poliuretano espanso flessibile. L'obiettivo principale è ottimizzare l'assegnazione dei task di carico e scarico per massimizzare l'efficienza operativa e ridurre i tempi di completamento delle lavorazioni.
 
 ## Obiettivi
 
