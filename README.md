@@ -1,4 +1,61 @@
 # Sistema di Ottimizzazione per multi-AGV nel Processo di Carico-Scarico di Macchine per Sagomatura del Poliuretano Espanso Flessibile
+## Descrizione del problema
+
+In questo progetto, affrontiamo un problema di ottimizzazione relativo alla gestione degli **AGV** (Automated Guided Vehicles) all'interno di un magazzino. L'obiettivo è minimizzare il **makespan**, ovvero il tempo massimo entro il quale tutti gli AGV completano le loro operazioni e ritornano alla base.
+
+### Componenti del problema
+
+- **N AGV** che si spostano nel magazzino eseguendo compiti di carico, scarico, movimentazione e attesa.
+- **M macchinari** che richiedono un numero specifico di lavorazioni.
+- **Base di partenza** e **base di stoccaggio** come punti di riferimento per i movimenti degli AGV.
+- Ogni AGV deve completare un ciclo di: **Carico -> Lavorazione -> Scarico** per ogni macchinario.
+
+Il problema è formulato come un modello di **Programmazione Lineare Intera Mista (MILP)**.
+
+## Modello MILP
+
+### Variabili di Decisione
+
+1. **\( x_{a,m}(t) \)**: Variabile binaria che indica se l'AGV \( a \) è assegnato al macchinario \( m \) per un task di lavorazione al tempo \( t \).
+2. **\( z_{a,m}(t) \)**: Variabile binaria che indica se l'AGV \( a \) sta caricando o scaricando presso il macchinario \( m \) al tempo \( t \).
+3. **\( y_{a}(t) \)**: Variabile binaria che indica se l'AGV \( a \) è in attesa al tempo \( t \).
+4. **\( t_{makespan} \)**: Variabile continua che rappresenta il tempo massimo entro cui tutte le operazioni sono completate.
+
+### Funzione Obiettivo
+
+Minimizzare il **makespan** \( t_{makespan} \):
+
+\[
+\min t_{makespan}
+\]
+
+### Vincoli
+
+1. **Sequenza operativa dei task**: Ogni macchinario deve seguire la sequenza **carico -> lavorazione -> scarico**.
+2. **Capacità dei macchinari**: Ogni macchinario può essere servito da un solo AGV alla volta:
+   \[
+   \sum_{a=1}^N x_{a,m}(t) \leq 1 \quad \forall m, t
+   \]
+3. **Esclusività dei task per ogni AGV**: Ogni AGV può eseguire un solo task alla volta:
+   \[
+   \sum_{m=1}^M z_{a,m}(t) + y_{a}(t) \leq 1 \quad \forall a, t
+   \]
+4. **Tempi di movimentazione**: Un AGV può iniziare un task di carico solo dopo aver raggiunto lo stoccaggio e il macchinario:
+   \[
+   \text{Inizio Task}_{m} \geq \text{Partenza} + T_{mov}(\text{Base}, m)
+   \]
+5. **Tempi di esecuzione**: Il tempo totale del ciclo operativo (carico, lavorazione, scarico) per ogni macchinario è dato da:
+   \[
+   T_{load}(m) + T_{process}(m) + T_{unload}(m)
+   \]
+6. **Ritorno alla base**: Dopo aver completato tutte le lavorazioni, ogni AGV deve ritornare alla base entro il makespan:
+   \[
+   T_{return}(a) \leq t_{makespan}
+   \]
+7. **Completamento delle lavorazioni**: Ogni macchinario deve completare il numero assegnato di lavorazioni:
+   \[
+   \sum_{t=0}^{t_{makespan}} x_{a,m}(t) = W_m \quad \forall m
+   \]
 
 ## Descrizione del Progetto
 
