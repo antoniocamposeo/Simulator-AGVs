@@ -1,0 +1,14 @@
+[
+{
+  "directory": "C:/Users/Antonio Camposeo/Desktop/scriptscpp/project1/build",
+  "command": "C:/msys64/ucrt64/bin/g++.exe  @CMakeFiles/project1.dir/includes_CXX.rsp -g -std=gnu++11 -o CMakeFiles/project1.dir/src/main.cpp.obj -c \"C:/Users/Antonio Camposeo/Desktop/scriptscpp/project1/src/main.cpp\"",
+  "file": "C:/Users/Antonio Camposeo/Desktop/scriptscpp/project1/src/main.cpp",
+  "output": "CMakeFiles/project1.dir/src/main.cpp.obj"
+},
+{
+  "directory": "C:/Users/Antonio Camposeo/Desktop/scriptscpp/project1/build",
+  "command": "C:/msys64/ucrt64/bin/g++.exe  @CMakeFiles/project1.dir/includes_CXX.rsp -g -std=gnu++11 -o CMakeFiles/project1.dir/src/Agv.cpp.obj -c \"C:/Users/Antonio Camposeo/Desktop/scriptscpp/project1/src/Agv.cpp\"",
+  "file": "C:/Users/Antonio Camposeo/Desktop/scriptscpp/project1/src/Agv.cpp",
+  "output": "CMakeFiles/project1.dir/src/Agv.cpp.obj"
+}
+]
