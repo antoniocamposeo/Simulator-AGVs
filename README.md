@@ -1,4 +1,4 @@
-# Sistema di Ottimizzazione per multi-AGV nel Processo di Carico-Scarico di Macchine per Sagomatura del Poliuretano Espanso Flessibile
+# Sistema di Ottimizzazione per multi-AGV nel Processo di Carico-Scarico di Macchine
 ## Descrizione del problema
 
 In questo progetto, affrontiamo un problema di ottimizzazione relativo alla gestione degli **AGV** (Automated Guided Vehicles) all'interno di un magazzino. L'obiettivo è minimizzare il **makespan**, ovvero il tempo massimo entro il quale tutti gli AGV completano le loro operazioni e ritornano alla base.
