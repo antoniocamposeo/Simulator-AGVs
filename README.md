@@ -10,6 +10,7 @@ This project implements an optimization system for managing **Automated Guided V
 - **Dynamic Task Management:** Real-time scheduling of AGVs for loading, processing, and unloading.
 - **Multi-AGV Support:** Scales to multiple AGVs and machines with customizable configurations.
 - **Performance Analysis:** Evaluates system efficiency based on variable speeds and the number of AGVs.
+![prova](https://github.com/user-attachments/assets/54627e60-b4f3-46c6-aa27-1ad9bcafb2a6)
 
 ---
 
@@ -17,6 +18,7 @@ This project implements an optimization system for managing **Automated Guided V
 - **AGVs:** Mobile robots that transport materials within the warehouse.
 - **Machines:** Perform specific tasks like loading, processing, and unloading.
 - **Objective:** Minimize the makespan while meeting operational constraints, such as machine capacity and AGV exclusivity.
+![prova](https://github.com/user-attachments/assets/b8719c0f-7193-4b93-98f9-8b5cf7840b30)
 
 ---
 
@@ -96,6 +98,7 @@ The system evaluates the impact of:
 Results include:
 - Optimal scheduling for different configurations.
 - Insights on efficiency improvements with speed and AGV count variations.
+![test](https://github.com/user-attachments/assets/6edeec17-b86b-4190-9263-9b062630d51e)
 
 ---
 
@@ -126,6 +129,4 @@ For questions or feedback, contact [antoniocamposeo@gmail.com].
 ![prova](https://github.com/user-attachments/assets/54627e60-b4f3-46c6-aa27-1ad9bcafb2a6)
 
 
-![prova](https://github.com/user-attachments/assets/b8719c0f-7193-4b93-98f9-8b5cf7840b30)
 
-![test](https://github.com/user-attachments/assets/6edeec17-b86b-4190-9263-9b062630d51e)
