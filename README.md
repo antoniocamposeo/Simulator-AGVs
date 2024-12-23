@@ -118,15 +118,9 @@ Contributions are welcome! Please follow these steps:
 
 ---
 
-## License
-This project is licensed under the MIT License. See `LICENSE` for details.
-
----
-
 ## Contact
 For questions or feedback, contact [antoniocamposeo@gmail.com].
 
-![prova](https://github.com/user-attachments/assets/54627e60-b4f3-46c6-aa27-1ad9bcafb2a6)
 
 
 
