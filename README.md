@@ -68,28 +68,6 @@ Minimize the **makespan**:
 3. View the results, including the task schedule and makespan.
 
 ---
-
-## Configuration
-Customize the following parameters in `config.json`:
-- **Number of AGVs:**
-  ```json
-  "num_agvs": 5
-  ```
-- **Machine Task Durations:**
-  ```json
-  "task_durations": {
-    "load": 10,
-    "process": 20,
-    "unload": 15
-  }
-  ```
-- **Speed Settings:**
-  ```json
-  "agv_speeds": [1.0, 2.0]
-  ```
-
----
-
 ## Performance Analysis
 The system evaluates the impact of:
 - **Variable AGV Speeds:** From 1 to 2 m/s.
