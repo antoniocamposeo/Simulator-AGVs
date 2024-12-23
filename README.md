@@ -1,93 +1,131 @@
-# Sistema di Ottimizzazione per multi-AGV nel Processo di Carico-Scarico di Macchine
-## Descrizione del problema
+# Multi-AGV Optimization System for Machine Load-Unload Process
 
-In questo progetto, affrontiamo un problema di ottimizzazione relativo alla gestione degli **AGV** (Automated Guided Vehicles) all'interno di un magazzino. L'obiettivo è minimizzare il **makespan**, ovvero il tempo massimo entro il quale tutti gli AGV completano le loro operazioni e ritornano alla base.
+## Overview
+This project implements an optimization system for managing **Automated Guided Vehicles (AGVs)** in a warehouse environment. The main objective is to minimize the **makespan**, the maximum time required for all AGVs to complete their tasks and return to the base.
 
-### Componenti del problema
+---
 
-- **N AGV** che si spostano nel magazzino eseguendo compiti di carico, scarico, movimentazione e attesa.
-- **M macchinari** che richiedono un numero specifico di lavorazioni.
-- **Base di partenza** e **base di stoccaggio** come punti di riferimento per i movimenti degli AGV.
-- Ogni AGV deve completare un ciclo di: **Carico -> Lavorazione -> Scarico** per ogni macchinario.
+## Features
+- **Optimized Scheduling:** Uses a **Mixed-Integer Linear Programming (MILP)** model to allocate tasks efficiently.
+- **Dynamic Task Management:** Real-time scheduling of AGVs for loading, processing, and unloading.
+- **Multi-AGV Support:** Scales to multiple AGVs and machines with customizable configurations.
+- **Performance Analysis:** Evaluates system efficiency based on variable speeds and the number of AGVs.
 
-Il problema è formulato come un modello di **Programmazione Lineare Intera Mista (MILP)**.
+---
 
-## Modello MILP
+## Problem Description
+- **AGVs:** Mobile robots that transport materials within the warehouse.
+- **Machines:** Perform specific tasks like loading, processing, and unloading.
+- **Objective:** Minimize the makespan while meeting operational constraints, such as machine capacity and AGV exclusivity.
 
-### Variabili di Decisione
+---
 
-1. **\( x_{a,m}(t) \)**: Variabile binaria che indica se l'AGV \( a \) è assegnato al macchinario \( m \) per un task di lavorazione al tempo \( t \).
-2. **\( z_{a,m}(t) \)**: Variabile binaria che indica se l'AGV \( a \) sta caricando o scaricando presso il macchinario \( m \) al tempo \( t \).
-3. **\( y_{a}(t) \)**: Variabile binaria che indica se l'AGV \( a \) è in attesa al tempo \( t \).
-4. **\( t_{makespan} \)**: Variabile continua che rappresenta il tempo massimo entro cui tutte le operazioni sono completate.
+## Model Overview
+The problem is formulated as a MILP with the following components:
 
-### Funzione Obiettivo
+### Decision Variables
+1. **\( x_{a,m}(t) \):** Indicates if AGV \( a \) is assigned to machine \( m \) at time \( t \).
+2. **\( z_{a,m}(t) \):** Indicates if AGV \( a \) is loading/unloading at machine \( m \) at time \( t \).
+3. **\( y_{a}(t) \):** Indicates if AGV \( a \) is idle at time \( t \).
+4. **\( t_{makespan} \):** Represents the maximum completion time.
 
-Minimizzare il **makespan** \( t_{makespan} \):
-
+### Objective Function
+Minimize the **makespan**:
 \[
 \min t_{makespan}
 \]
 
-### Vincoli
+### Constraints
+1. **Task Sequencing:** Machines must follow the sequence of loading, processing, and unloading.
+2. **Machine Capacity:** Only one AGV can operate at a machine at a given time.
+3. **Task Exclusivity:** Each AGV performs one task at a time.
+4. **Movement Timing:** AGVs must account for travel time to machines.
+5. **Task Completion:** All machines complete their assigned tasks within the makespan.
 
-1. **Sequenza operativa dei task**: Ogni macchinario deve seguire la sequenza **carico -> lavorazione -> scarico**.
-2. **Capacità dei macchinari**: Ogni macchinario può essere servito da un solo AGV alla volta:
-   \[
-   \sum_{a=1}^N x_{a,m}(t) \leq 1 \quad \forall m, t
-   \]
-3. **Esclusività dei task per ogni AGV**: Ogni AGV può eseguire un solo task alla volta:
-   \[
-   \sum_{m=1}^M z_{a,m}(t) + y_{a}(t) \leq 1 \quad \forall a, t
-   \]
-4. **Tempi di movimentazione**: Un AGV può iniziare un task di carico solo dopo aver raggiunto lo stoccaggio e il macchinario:
-   \[
-   \text{Inizio Task}_{m} \geq \text{Partenza} + T_{mov}(\text{Base}, m)
-   \]
-5. **Tempi di esecuzione**: Il tempo totale del ciclo operativo (carico, lavorazione, scarico) per ogni macchinario è dato da:
-   \[
-   T_{load}(m) + T_{process}(m) + T_{unload}(m)
-   \]
-6. **Ritorno alla base**: Dopo aver completato tutte le lavorazioni, ogni AGV deve ritornare alla base entro il makespan:
-   \[
-   T_{return}(a) \leq t_{makespan}
-   \]
-7. **Completamento delle lavorazioni**: Ogni macchinario deve completare il numero assegnato di lavorazioni:
-   \[
-   \sum_{t=0}^{t_{makespan}} x_{a,m}(t) = W_m \quad \forall m
-   \]
+---
 
+## Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/your-agv-project.git
+   cd your-agv-project
+   ```
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-## Obiettivi
+---
 
-- Sviluppare un sistema di robot mobili (AGV) per il trasporto di blocchi di poliuretano espanso.
-- Ottimizzare l'assegnazione dei task per minimizzare il tempo di completamento e massimizzare l'efficienza operativa.
-- Creare un sistema di scheduling per la gestione dinamica dei task in tempo reale.
+## Usage
+1. Define the problem parameters (e.g., number of AGVs, machines, and task durations) in the configuration file.
+2. Run the optimization model:
+   ```bash
+   python optimize.py
+   ```
+3. View the results, including the task schedule and makespan.
 
-## Componenti Principali
+---
 
-- **AGV**: Robot mobili responsabili del trasporto dei materiali.
-- **Macchine**: Entità che eseguono operazioni di carico, lavorazione e scarico.
-- **Scheduler**: Componente che gestisce l'assegnazione dei task ad ogni intervallo di tempo, ottimizzando i movimenti degli AGV.
+## Configuration
+Customize the following parameters in `config.json`:
+- **Number of AGVs:**
+  ```json
+  "num_agvs": 5
+  ```
+- **Machine Task Durations:**
+  ```json
+  "task_durations": {
+    "load": 10,
+    "process": 20,
+    "unload": 15
+  }
+  ```
+- **Speed Settings:**
+  ```json
+  "agv_speeds": [1.0, 2.0]
+  ```
+
+---
+
+## Performance Analysis
+The system evaluates the impact of:
+- **Variable AGV Speeds:** From 1 to 2 m/s.
+- **Number of AGVs:** Up to 5 units.
+
+Results include:
+- Optimal scheduling for different configurations.
+- Insights on efficiency improvements with speed and AGV count variations.
+
+---
+
+## Contributing
+Contributions are welcome! Please follow these steps:
+1. Fork the repository.
+2. Create a feature branch:
+   ```bash
+   git checkout -b feature-name
+   ```
+3. Commit changes and push:
+   ```bash
+   git commit -m "Add feature-name"
+   git push origin feature-name
+   ```
+4. Open a pull request.
+
+---
+
+## License
+This project is licensed under the MIT License. See `LICENSE` for details.
+
+---
+
+## Contact
+For questions or feedback, contact [antoniocamposeo@gmail.com].
+
 ![prova](https://github.com/user-attachments/assets/54627e60-b4f3-46c6-aa27-1ad9bcafb2a6)
 
 
-## Funzionamento
-
-1. **Raccolta Dati**: Ogni entità (AGV e macchine) raccoglie informazioni sulla propria posizione, stato e task da eseguire a intervalli regolari.
-   
-2. **Assegnazione dei Task**: Lo Scheduler crea una lista di AGV e macchine disponibili e assegna i task tenendo conto della distanza minima e della sequenza di operazioni (carico, lavorazione, scarico).
-
-3. **Ottimizzazione**: L'algoritmo utilizza un'euristica per migliorare l'assegnazione dei task e ridurre i tempi di inattività.
 ![prova](https://github.com/user-attachments/assets/b8719c0f-7193-4b93-98f9-8b5cf7840b30)
 
-# Analisi della Velocità Variabile degli AGV
-
-È stata effettuata un'analisi riguardo alla **velocità variabile degli AGV**, che può variare da **1 a 2 m/s**. Sono state studiate le soluzioni al variare della velocità e del numero di AGV, fino a un massimo di **5 unità**. Questa analisi ha permesso di valutare l'impatto della velocità e della quantità di AGV sulla performance complessiva del sistema, identificando i parametri ottimali per migliorare l'efficienza operativa.
 ![test](https://github.com/user-attachments/assets/6edeec17-b86b-4190-9263-9b062630d51e)
-## Installazione
-
-1. Clona questo repository:
-   ```bash
-   git clone https://github.com/tuo-username/tuo-progetto-agv.git
-   cd tuo-progetto-agv
